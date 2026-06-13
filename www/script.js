@@ -23,17 +23,19 @@ let currentHls = null;
 let hlsInitInterval = null;
 let controlsTimeout;
 
-/* LAST CHANNEL CACHE */
+/* LAST CHANNEL CACHE — survives page refresh */
 function saveLastChannel(ch) {
   if (!ch || !ch.url) return;
   try {
     localStorage.setItem(LAST_CHANNEL_KEY, JSON.stringify({
       url: ch.url,
       name: ch.name,
-      logo: ch.logo || "",
-      group: ch.group || "",
+      logo: ch.logo || '',
+      group: ch.group || '',
     }));
-  } catch(e) { console.warn("Could not save last channel:", e); }
+  } catch (e) {
+    console.warn("Could not save last channel:", e);
+  }
 }
 
 function restoreLastChannel() {
@@ -325,17 +327,15 @@ function loadPlaylist() {
         filterAndSearch();
 
         // Restore last channel or fall back to default
-        if (filteredChannels.length > 0) {
-          const last = restoreLastChannel();
-          const targetIdx = last
-            ? filteredChannels.findIndex(c => c.url === last.url)
-            : -1;
-          if (targetIdx !== -1) {
-            playChannel(targetIdx);
-          } else {
-            const defaultIndex = filteredChannels.findIndex(c => c.name.toLowerCase().includes("channel i"));
-            playChannel(defaultIndex !== -1 ? defaultIndex : 0);
-          }
+        const last = restoreLastChannel();
+        const targetIdx = last
+          ? filteredChannels.findIndex(c => c.url === last.url)
+          : -1;
+        if (targetIdx !== -1) {
+          playChannel(targetIdx);
+        } else if (filteredChannels.length > 0) {
+          const defaultIndex = filteredChannels.findIndex(c => c.name.toLowerCase().includes("channel i"));
+          playChannel(defaultIndex !== -1 ? defaultIndex : 0);
         }
       }
       // 2. Fetch remote online playlist in the background
@@ -789,8 +789,10 @@ function playChannel(index) {
 
   updateCurrentInfoCard(channel);
 
+  // Sync mute button to video's actual muted state
   updateVolumeButtonState(video.muted);
 
+  // Persist last channel so it survives page refresh
   saveLastChannel(channel);
 }
 
@@ -1332,27 +1334,8 @@ function setupViewModeToggle() {
 let latestApkUrl = "#";
 
 function setupMobileAppBanner() {
+  return; // disabled
   if (window.Capacitor) return;
-
-  fetch("#")
-    .then(response => {
-      if (!response.ok) throw new Error("GitHub API error");
-      return response.json();
-    })
-    .then(data => {
-      if (data && data.assets && data.assets.length > 0) {
-        const apkAsset = data.assets.find(asset => asset.name.endsWith(".apk"));
-        if (apkAsset && apkAsset.browser_download_url) {
-          latestApkUrl = apkAsset.browser_download_url;
-          document.querySelectorAll(".download-apk-link").forEach(link => {
-            link.setAttribute("href", latestApkUrl);
-          });
-        }
-      }
-    })
-    .catch(err => {
-      console.warn("Failed to retrieve latest APK release from GitHub API, falling back to release page:", err);
-    });
 
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
   const isBannerHidden = localStorage.getItem("streamtv_hide_app_banner") === "true";
@@ -1379,6 +1362,7 @@ function closeAppBanner() {
 const currentBuildCode = 14; // Matches version 1.1.3 build code
 
 function checkForUpdates() {
+  return; // disabled
   if (!window.Capacitor) return;
 
   const configUrl = "app-update.json";
