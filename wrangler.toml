@@ -1,6 +1,6 @@
 name = "stream-tv"
 main = "src/index.js"
-compatibility_date = "2024-12-18"
+compatibility_date = "2026-06-14"
 
 [assets]
 directory = "./www"
